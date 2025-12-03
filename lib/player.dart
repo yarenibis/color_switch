@@ -1,20 +1,22 @@
+import 'package:color_switch/ground.dart';
+import 'package:color_switch/my_game.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-class Player extends PositionComponent{
-
+class Player extends PositionComponent with HasGameRef<MyGame> {
   Player({
+    required super.position,
     this.playerRadius = 15,
   });
-   final _velocity = Vector2.zero();
-   final _gravity = 980.0;
-   final _jumpSpeed = 350.0;
 
-   final double playerRadius;
+  final _velocity = Vector2.zero();
+  final _gravity = 980.0;
+  final _jumpSpeed = 350.0;
 
- @override
+  final double playerRadius;
+
+  @override
   void onMount() {
-    position = Vector2.zero();
     size = Vector2.all(playerRadius * 2);
     anchor = Anchor.center;
     super.onMount();
@@ -23,11 +25,19 @@ class Player extends PositionComponent{
   @override
   void update(double dt) {
     super.update(dt);
-   position += _velocity*dt;
-    _velocity.y+=_gravity*dt;
+    position += _velocity * dt;
+
+    Ground ground = gameRef.findByKeyName(Ground.keyName)!;
+
+    if (positionOfAnchor(Anchor.bottomCenter).y > ground.position.y) {
+      _velocity.setValues(0, 0);
+      position = Vector2(0, ground.position.y - (height / 2));
+    } else {
+      _velocity.y += _gravity * dt;
+    }
   }
 
-   @override
+  @override
   void render(Canvas canvas) {
     super.render(canvas);
     canvas.drawCircle(
@@ -35,13 +45,9 @@ class Player extends PositionComponent{
       playerRadius,
       Paint()..color = Colors.yellow,
     );
-    
   }
-
 
   void jump() {
     _velocity.y = -_jumpSpeed;
   }
 }
-
-
